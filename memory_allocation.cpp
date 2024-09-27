@@ -87,3 +87,18 @@ void dealloc(void* chunk) {
 }
 
 // Function to print the status
+void print_status() {
+  std::cout << "\n -----Allocated List-----" << std::endl;
+  for (const auto& memory : allocated) {
+    std::cout << "Chunk stored at address: " << memory.space
+              << ", Total allocated size: " << memory.requested
+              << " bytes, Total used size: " << memory.used << " bytes" << std::endl; 
+  }
+
+  std::cout << "\n -----Free List-----" << std::endl;
+  for (const auto& memory : free) {
+    std::cout << "Chunk stored at address: " << memory.space
+              << ", Total allocated size: " << memory.requested
+              << " bytes" << std::endl; 
+  }
+}
