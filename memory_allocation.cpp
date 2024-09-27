@@ -1,6 +1,6 @@
 #include <iostream>
-#include <cstdlib> // For exit()
-#include <unistd.h> // for sbrk()
+#include <cstdlib> // For exit() and malloc()
+// #include <unistd.h> // for sbrk()
 #include <list>
 #include <array>
 
@@ -26,6 +26,17 @@ std::size_t find_size(std::size_t requested_chunk_size) {
     }
   }
   return 0;
+}
+
+// Function to request more memory if exceed fixed partition by using malloc()
+void* request_memory(std::size_t size) {
+  // Apply malloc() to allocate memory
+  void* address = std::malloc(size);
+  if (!address) {
+    std::cerr << "There is an error in memory allocation!" << std::endl;
+    exit(EXIT_FAILURE);
+  }
+  return address;
 }
 
 // Memory allocation
@@ -55,12 +66,8 @@ void* alloc(std::size_t chunk_size) {
     }
   }
 
-  // If no suitable fixed-size chunk is found, make a OS call to request for more memory
-  void* request_space = sbrk(actual);
-  if (request_space == (void*)-1) {
-    std::cerr << "There is an error in memory allocation!" << std::endl;
-    return nullptr;
-  }
+  // If no suitable fixed-size chunk is found, make a malloc call to request for more memory
+  void* request_space = request_memory(actual);
 
   // Create a new allocation and add it to the allocated
   MemoryChunk new_allocation = {actual, chunk_size, request_space};
@@ -110,13 +117,13 @@ int main() {
     void* chunk1 = alloc(50);  // Allocates 64 bytes
     void* chunk2 = alloc(200); // Allocates 256 bytes
 
-    std::cout << "After allocations:" << std::endl;
+    std::cout << "\nAfter allocations:" << std::endl;
     print_status();
 
     dealloc(chunk1); // Deallocate the first chunk
     dealloc(chunk2); // Deallocate the second chunk
 
-    std::cout << "After deallocations:" << std::endl;
+    std::cout << "\nAfter deallocations:" << std::endl;
     print_status();
 
     // Testing fatal error (attempting to deallocate unallocated memory)
