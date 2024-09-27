@@ -12,8 +12,8 @@ struct MemoryChunk {
 };
 
 // Global list for allocated and free memory
-std::list<MemoryChunk> allocated;
-std::list<MemoryChunk> free;
+std::list<MemoryChunk> allocated_chunk_list;
+std::list<MemoryChunk> free_chunk_list;
 
 // Fixed partition sizes as mentioned in the specification
 const std::array<std::size_t, 5> chunk_sizes = {32, 64, 128, 256, 512};
@@ -44,13 +44,13 @@ void* alloc(std::size_t chunk_size) {
   }
 
   // Scan through the free list for a free chunk (first fit strategy?)
-  for (auto iterator = free.begin(); iterator != free.end(); ++iterator) {
+  for (auto iterator = free_chunk_list.begin(); iterator != free_chunk_list.end(); ++iterator) {
     if (iterator->requested >= actual) {
       // Found a chunk to allocate the memory, move the chunk to allocated list
       MemoryChunk alloc = *iterator;
       alloc.used = chunk_size; // Keep track the used size for printing purposes
-      free.erase(iterator); // delete the free space
-      allocated.push_back(alloc);
+      free_chunk_list.erase(iterator); // delete the free space
+      allocated_chunk_list.push_back(alloc);
       return alloc.space;
     }
   }
@@ -64,19 +64,19 @@ void* alloc(std::size_t chunk_size) {
 
   // Create a new allocation and add it to the allocated
   MemoryChunk new_allocation = {actual, chunk_size, request_space};
-  allocated.push_back(new_allocation);
+  allocated_chunk_list.push_back(new_allocation);
   return request_space;
 }
 
 // Memory de-allocation
 void dealloc(void* chunk) {
   // Find the chunk in the allocated linked list
-  for (auto iterator = allocated.begin(); iterator != allocated.end(); ++iterator) {
+  for (auto iterator = allocated_chunk_list.begin(); iterator != allocated_chunk_list.end(); ++iterator) {
     if (iterator->space == chunk) {
       // Move the chunk back to the free list
       MemoryChunk deallocated = *iterator;
-      allocated.erase(iterator);  // Remove from the list
-      free.push_back(deallocated);  // Add to the end
+      allocated_chunk_list.erase(iterator);  // Remove from the list
+      free_chunk_list.push_back(deallocated);  // Add to the end
       return;
     }
   }
@@ -89,16 +89,39 @@ void dealloc(void* chunk) {
 // Function to print the status
 void print_status() {
   std::cout << "\n -----Allocated List-----" << std::endl;
-  for (const auto& memory : allocated) {
+  for (const auto& memory : allocated_chunk_list) {
     std::cout << "Chunk stored at address: " << memory.space
               << ", Total allocated size: " << memory.requested
               << " bytes, Total used size: " << memory.used << " bytes" << std::endl; 
   }
 
   std::cout << "\n -----Free List-----" << std::endl;
-  for (const auto& memory : free) {
+  for (const auto& memory : free_chunk_list) {
     std::cout << "Chunk stored at address: " << memory.space
               << ", Total allocated size: " << memory.requested
               << " bytes" << std::endl; 
   }
+}
+
+// Testing purposes only
+
+int main() {
+    // Example usage of the memory allocator
+    void* chunk1 = alloc(50);  // Allocates 64 bytes
+    void* chunk2 = alloc(200); // Allocates 256 bytes
+
+    std::cout << "After allocations:" << std::endl;
+    print_status();
+
+    dealloc(chunk1); // Deallocate the first chunk
+    dealloc(chunk2); // Deallocate the second chunk
+
+    std::cout << "After deallocations:" << std::endl;
+    print_status();
+
+    // Testing fatal error (attempting to deallocate unallocated memory)
+    // Uncomment the following line to test the error case:
+    // dealloc((void*)0x12345); // This will trigger the fatal error
+
+    return 0;
 }
