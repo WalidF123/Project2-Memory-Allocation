@@ -142,6 +142,7 @@
 
 
 
+#include <unistd.h>
 
 #include <iostream>
 #include <cstdlib> 
@@ -177,16 +178,25 @@ std::size_t find_size(std::size_t requested_chunk_size) {
   return 0;
 }
 
-// Function to request more memory using malloc()
+// // Function to request more memory using malloc()
+// void* request_memory(std::size_t size) {
+//   void* address = std::malloc(size);
+//   if (!address) {
+//     std::cerr << "Memory allocation failed!" << std::endl;
+//     exit(EXIT_FAILURE);
+//   }
+//   return address;
+// }
+// Function to request more memory using sbrk()
 void* request_memory(std::size_t size) {
-  void* address = std::malloc(size);
-  if (!address) {
+  // Use sbrk to increase the program's data space
+  void* address = sbrk(size);
+  if (address == (void*)-1) {
     std::cerr << "Memory allocation failed!" << std::endl;
     exit(EXIT_FAILURE);
   }
   return address;
 }
-
 // FIRST FIT Memory Allocation
 void* first_fit_alloc(std::size_t chunk_size) {
   std::size_t actual;
@@ -214,7 +224,7 @@ void* first_fit_alloc(std::size_t chunk_size) {
     }
   }
 
-  // If no suitable chunk is found, allocate new memory using malloc
+  // If no suitable chunk is found, allocate new memory using sbrk
   void* request_space = request_memory(actual);
 
   // Create a new allocation and add it to the allocated list
@@ -260,7 +270,7 @@ void* best_fit_alloc(std::size_t chunk_size) {
     return alloc.space;
   }
 
-  // If no suitable chunk is found, allocate new memory using malloc
+  // If no suitable chunk is found, allocate new memory using sbrk
   void* request_space = request_memory(actual);
 
   // Create a new allocation and add it to the allocated list
