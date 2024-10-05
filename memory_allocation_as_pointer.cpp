@@ -117,6 +117,55 @@ void* first_fit_alloc(std::size_t chunk_size) {
     return request_space;
 }
 
+// BEST FIT Memory Allocation
+void* best_fit_alloc(std::size_t chunk_size) {
+    std::size_t actual;
+
+    // If the requested chunk size is bigger than the largest partition (512), allocate exact size
+    if (chunk_size > 512) {
+        actual = chunk_size;  
+    } else {
+        actual = find_size(chunk_size);
+        if (actual == 0) {
+            std::cerr << "Invalid chunk size!" << std::endl;
+            return nullptr;
+        }
+    }
+
+    // Best-fit: Find the smallest free chunk that can fit the requested size
+    auto best_fit_it = free_chunk_list.end();
+    std::size_t best_fit_size = SIZE_MAX;
+
+    for (auto iterator = free_chunk_list.begin(); iterator != free_chunk_list.end(); ++iterator) {
+        if ((*iterator)->requested >= actual && (*iterator)->requested < best_fit_size) {
+            best_fit_it = iterator;
+            best_fit_size = (*iterator)->requested;
+        }
+    }
+
+    // If a suitable chunk is found, allocate it
+    if (best_fit_it != free_chunk_list.end()) {
+        MemoryChunk* alloc = *best_fit_it;
+        alloc->used = chunk_size; // Keep track of the used size for printing purposes
+        free_chunk_list.erase(best_fit_it); // Remove from free list
+        allocated_chunk_list.push_back(alloc); // Add to allocated list
+        std::cout << "Best Fit Allocated: " << chunk_size << " bytes at " << alloc->space << std::endl;
+        return alloc->space;
+    }
+
+    // If no suitable chunk is found, allocate new memory using sbrk() or malloc() for both memory and the chunk structure
+    void* request_space = request_memory(actual);
+    MemoryChunk* new_allocation = allocate_memory_chunk(); // Allocate the metadata using sbrk() or malloc()
+    new_allocation->requested = actual;
+    new_allocation->used = chunk_size;
+    new_allocation->space = request_space;
+    
+    allocated_chunk_list.push_back(new_allocation); // Add to the allocated list
+    std::cout << "Allocated new memory: " << chunk_size << " bytes at " << request_space << std::endl;
+    return request_space;
+}
+
+
 // Memory De-allocation
 void dealloc(void* chunk = nullptr) {
     if (chunk == nullptr) {
@@ -192,6 +241,8 @@ int main(int argc, char* argv[]) {
             void* allocated_space = nullptr;
             if (strategy == "firstfit") {
                 allocated_space = first_fit_alloc(chunk_size);
+            } else if (strategy == "bestfit") {
+                allocated_space = best_fit_alloc(chunk_size);
             } else {
                 std::cerr << "Unknown allocation strategy: " << strategy << std::endl;
                 return 1;
