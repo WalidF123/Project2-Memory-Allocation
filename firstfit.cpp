@@ -34,24 +34,24 @@ std::size_t find_size(std::size_t requested_chunk_size) {
   }
   return 0;
 }
-// void* request_memory(std::size_t size) {
-//   void* address = std::malloc(size);
-//   if (!address) {
-//     std::cerr << "Memory allocation failed!" << std::endl;
-//     exit(EXIT_FAILURE);
-//   }
-//   return address;
-// }
-// Function to request more memory using sbrk()
 void* request_memory(std::size_t size) {
-  // Use sbrk to increase the program's data space
-  void* address = sbrk(size);
-  if (address == (void*)-1) {
+  void* address = std::malloc(size);
+  if (!address) {
     std::cerr << "Memory allocation failed!" << std::endl;
     exit(EXIT_FAILURE);
   }
   return address;
 }
+// Function to request more memory using sbrk()
+// void* request_memory(std::size_t size) {
+//   // Use sbrk to increase the program's data space
+//   void* address = sbrk(size);
+//   if (address == (void*)-1) {
+//     std::cerr << "Memory allocation failed!" << std::endl;
+//     exit(EXIT_FAILURE);
+//   }
+//   return address;
+// }
 
 // Function to pre-populate free_chunk_list at the start of the program
 void populate_chunks(std::size_t num) {
@@ -92,52 +92,6 @@ void* first_fit_alloc(std::size_t chunk_size) {
       std::cout << "First Fit Allocated: " << chunk_size << " bytes at " << alloc.space << std::endl;
       return alloc.space;
     }
-  }
-
-  // If no suitable chunk is found, allocate new memory using sbrk
-  void* request_space = request_memory(actual);
-
-  // Create a new allocation and add it to the allocated list
-  MemoryChunk new_allocation = {actual, chunk_size, request_space};
-  allocated_chunk_list.push_back(new_allocation);
-  std::cout << "Allocated new memory: " << chunk_size << " bytes at " << request_space << std::endl;
-  return request_space;
-}
-
-// BEST FIT Memory Allocation
-void* best_fit_alloc(std::size_t chunk_size) {
-  std::size_t actual;
-
-  // If the requested chunk size is bigger than the largest partition (512), allocate exact size
-  if (chunk_size > 512) {
-    actual = chunk_size;  
-  } else {
-    actual = find_size(chunk_size);
-    if (actual == 0) {
-      std::cerr << "Invalid chunk size!" << std::endl;
-      return nullptr;
-    }
-  }
-
-  // Best-fit: Find the smallest free chunk that can fit the requested size
-  auto best_fit_it = free_chunk_list.end();
-  std::size_t best_fit_size = SIZE_MAX;
-
-  for (auto iterator = free_chunk_list.begin(); iterator != free_chunk_list.end(); ++iterator) {
-    if (iterator->requested >= actual && iterator->requested < best_fit_size) {
-      best_fit_it = iterator;
-      best_fit_size = iterator->requested;
-    }
-  }
-
-  // If we found a suitable chunk, allocate it
-  if (best_fit_it != free_chunk_list.end()) {
-    MemoryChunk alloc = *best_fit_it;
-    alloc.used = chunk_size; // Keep track of the used size for printing purposes
-    free_chunk_list.erase(best_fit_it); // Remove from free list
-    allocated_chunk_list.push_back(alloc); // Add to allocated list
-    std::cout << "Best Fit Allocated: " << chunk_size << " bytes at " << alloc.space << std::endl;
-    return alloc.space;
   }
 
   // If no suitable chunk is found, allocate new memory using sbrk
@@ -197,13 +151,12 @@ void print_status() {
 }
 
 int main(int argc, char* argv[]) {
-    if (argc != 3) {
-        std::cerr << "Usage: " << argv[0] << " [firstfit|bestfit] datafile" << std::endl;
+    if (argc != 2) {
+        std::cerr << "Usage: " << argv[0] << " datafile" << std::endl;
         return 1;
     }
 
-    std::string strategy = argv[1];
-    std::string datafile = argv[2];
+    std::string datafile = argv[1];
 
     // Pre-allocate a pool of memory chunks in accordance to the chunks_size to the free_chunk_list
     std::size_t num_chunks = 5; // Default 5 chunks per partition
@@ -222,17 +175,7 @@ int main(int argc, char* argv[]) {
     while (file >> operation) {
         if (operation == "alloc:") {
             file >> chunk_size;
-
-            void* allocated_space = nullptr;
-            if (strategy == "firstfit") {
-                allocated_space = first_fit_alloc(chunk_size);
-            } else if (strategy == "bestfit") {
-                allocated_space = best_fit_alloc(chunk_size);
-            } else {
-                std::cerr << "Unknown allocation strategy: " << strategy << std::endl;
-                return 1;
-            }
-
+            void* allocated_space = first_fit_alloc(chunk_size);
             if (allocated_space != nullptr) {
                 allocation_stack.push_back(allocated_space); // Track allocated space
             }
@@ -248,3 +191,4 @@ int main(int argc, char* argv[]) {
 
     return 0;
 }
+
