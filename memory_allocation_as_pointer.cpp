@@ -61,22 +61,6 @@ void* request_memory(std::size_t size) {
     return address;
 }
 
-// Function to pre-populate free_chunk_list at the start of the program
-void populate_chunks(std::size_t num) {
-    for (std::size_t partition : chunk_sizes) {
-        for (std::size_t i = 0; i < num; ++i) {
-            // Allocate pool of memory chunks
-            void* space = request_memory(partition);
-            // Dynamically allocate a MemoryChunk struct using sbrk() or malloc()
-            MemoryChunk* chunk = allocate_memory_chunk();
-            chunk->requested = partition;
-            chunk->used = 0;
-            chunk->space = space;
-            free_chunk_list.push_back(chunk);
-        }
-    }
-    std::cout << "Populated the free list with " << num << " chunks for each defined partition size." << std::endl;
-}
 
 // FIRST FIT Memory Allocation
 void* first_fit_alloc(std::size_t chunk_size) {
@@ -220,9 +204,6 @@ int main(int argc, char* argv[]) {
     std::string strategy = argv[1];
     std::string datafile = argv[2];
 
-    // Pre-allocate a pool of memory chunks in accordance to the chunks_size to the free_chunk_list
-    std::size_t num_chunks = 5; // Default 5 chunks per partition
-    populate_chunks(num_chunks);
 
     // Open the datafile for reading
     std::ifstream file(datafile);
