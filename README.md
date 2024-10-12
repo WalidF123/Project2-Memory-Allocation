@@ -4,10 +4,14 @@ This project implements two memory allocation strategies, First Fit and Best Fit
 The programs allow memory allocation and deallocation based on the specified strategy and print the status of the allocated and free memory blocks.
 
 First Fit: Finds the first memory block large enough to fulfill the request.
+
 Best Fit: Finds the smallest memory block that fits the request, minimizing leftover free space.
 Files Included
+
 firstfit.cpp: Implements the First Fit memory allocation strategy.
+
 bestfit.cpp: Implements the Best Fit memory allocation strategy.
+
 Makefile: Used to compile the two programs.
 Test data file: You can use a custom text file with commands to test the program (instructions below).
 
