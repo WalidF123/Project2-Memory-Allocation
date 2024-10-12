@@ -21,6 +21,7 @@ The Makefile is provided to build both programs (firstfit and bestfit). To compi
   - # This will generate two executable files:
 
   firstfit: Implements the First Fit memory allocation strategy.
+  
   bestfit: Implements the Best Fit memory allocation strategy.
 To clean up the generated files (object files and executables), run:
   -   make clean
