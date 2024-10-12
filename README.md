@@ -27,10 +27,10 @@ To clean up the generated files (object files and executables), run:
 
 ## Running the Programs
 To run the First Fit program:
--   # first fit:
+-    first fit:
         - ./firstfit <datafile>
 To run the <b>Best Fit</b> program:
--   # ./bestfit <datafile>
+-   ./bestfit <datafile>
 
 Group Members: 
 Walid Feki s3972717
