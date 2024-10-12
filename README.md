@@ -28,9 +28,13 @@ To clean up the generated files (object files and executables), run:
 
 ## Running the Programs
 To run the First Fit program:
- - ./firstfit <datafile>
+
+ - ./firstfit datafile
+
+ 
 To run the Best Fit program:
- -   ./bestfit <datafile>
+
+ -   ./bestfit datafile
 
 Group Members: 
 Walid Feki s3972717
